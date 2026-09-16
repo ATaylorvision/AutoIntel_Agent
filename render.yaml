@@ -1,0 +1,52 @@
+# Render deployment for AutoIntel Agent.
+#
+# Render reads this when you create a Blueprint from the repo. It builds the
+# Dockerfile and runs the Express server on port 3000.
+#
+# Secrets are NOT in this file on purpose. Every value below with
+# `sync: false` must be entered by hand in Render's Environment tab, so nothing
+# sensitive ever lands in source control.
+
+services:
+  - type: web
+    name: autointel-agent
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: ohio
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Render sets PORT, but the server listens on 3000 explicitly.
+      - key: PORT
+        value: 3000
+
+      # --- Set these in the Render dashboard -----------------------------
+      # Firebase service account JSON (the whole file contents).
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+
+      # Public URL of this service, e.g. https://autointel-agent.onrender.com
+      # Stripe redirects back here after checkout.
+      - key: APP_URL
+        sync: false
+
+      - key: ADMIN_EMAILS
+        sync: false
+
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_SETUP
+        sync: false
+
+      - key: N8N_EVENTS_WEBHOOK_URL
+        sync: false
+      - key: N8N_SHARED_SECRET
+        sync: false

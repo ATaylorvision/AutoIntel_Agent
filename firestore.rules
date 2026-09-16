@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'AleshaTaylor1@gmail.com' ||
+        request.auth.token.email == 'admin@autointel.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // App settings (read and write allowed for app and admin configuration)
+    match /settings/{docId} {
+      allow read, write: if true;
+    }
+
+    // Missed-call audits (unauthenticated visitors can create audits and read back their audit result)
+    match /audits/{auditId} {
+      allow read, write: if true;
+    }
+
+    // User accounts
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Shop records
+    match /shops/{shopId} {
+      allow read, write: if true;
+
+      // Tests subcollection for testing receptionist scenarios
+      match /tests/{testId} {
+        allow read, write: if true;
+      }
+
+      // Changes subcollection for post-onboarding updates
+      match /changes/{changeId} {
+        allow read, write: if true;
+      }
+
+      // Calls subcollection
+      match /calls/{callId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Unmatched intake errors for HighLevel receptionist diagnostics
+    match /intakeErrors/{errorId} {
+      allow read, write: if true;
+    }
+
+    // Call records
+    match /calls/{callId} {
+      allow read, write: if true;
+    }
+  }
+}

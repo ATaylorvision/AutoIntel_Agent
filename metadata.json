@@ -1,0 +1,6 @@
+{
+  "name": "AutoIntel Agent",
+  "description": "Mobile-first storefront and customer portal for independent auto repair shops, powered by 24/7 AI phone reception.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

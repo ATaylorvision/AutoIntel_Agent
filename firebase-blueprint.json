@@ -1,0 +1,177 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and associated shop ID",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "mobile": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "admin"] },
+        "shopId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "role", "shopId"]
+    },
+    "Shop": {
+      "title": "Shop",
+      "description": "Auto repair shop configuration, subscription status, and receptionist onboarding setup",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "shopName": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "ownerMobile": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending_payment", "paid_setup", "provisioning", "live", "active", "paused", "canceled"] },
+        "subscriptionStatus": { "type": "string", "enum": ["none", "active", "past_due", "canceled"] },
+        "setupScore": { "type": "number" },
+        "receptionistSetup": { "type": "object" },
+        "autointelNumber": { "type": "string" },
+        "locationId": { "type": "string" },
+        "internalNotes": { "type": "string" },
+        "liveAt": { "type": "string" },
+        "auditId": { "type": "string" },
+        "paidAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "shopName", "ownerUid", "status"]
+    },
+    "ChangeRecord": {
+      "title": "ChangeRecord",
+      "description": "Post-onboarding modifications requested by shop owner requiring admin review",
+      "type": "object",
+      "properties": {
+        "section": { "type": "string" },
+        "oldValues": { "type": "object" },
+        "newValues": { "type": "object" },
+        "applied": { "type": "boolean" },
+        "appliedAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["section", "applied", "createdAt"]
+    },
+    "IntakeError": {
+      "title": "IntakeError",
+      "description": "Unmatched or erroneous inbound calls received from HighLevel webhook",
+      "type": "object",
+      "properties": {
+        "callerPhone": { "type": "string" },
+        "locationId": { "type": "string" },
+        "rawPayload": { "type": "object" },
+        "errorReason": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["errorReason", "createdAt"]
+    },
+    "TestRecord": {
+      "title": "TestRecord",
+      "description": "Owner verification call scenario test result",
+      "type": "object",
+      "properties": {
+        "scenario": { "type": "string" },
+        "result": { "type": "string", "enum": ["handled_well", "something_off"] },
+        "note": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["scenario", "result", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global storefront parameters including daily same-day cutoff time",
+      "type": "object",
+      "properties": {
+        "sameDayCutoff": { "type": "string" },
+        "timezone": { "type": "string" },
+        "supportPhone": { "type": "string" },
+        "supportEmail": { "type": "string" }
+      },
+      "required": ["sameDayCutoff", "supportPhone"]
+    },
+    "Audit": {
+      "title": "Audit",
+      "description": "Prospect calculator results and potential revenue lost",
+      "type": "object",
+      "properties": {
+        "weeklyCalls": { "type": "number" },
+        "missedPercent": { "type": "number" },
+        "avgTicket": { "type": "number" },
+        "closeRate": { "type": "number" },
+        "monthlyMissedCalls": { "type": "number" },
+        "lostJobs": { "type": "number" },
+        "lostRevenue": { "type": "number" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "CallRecord": {
+      "title": "CallRecord",
+      "description": "Receptionist call intake record from n8n webhook",
+      "type": "object",
+      "properties": {
+        "externalCallId": { "type": "string" },
+        "shopId": { "type": "string" },
+        "locationId": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "durationSeconds": { "type": "number" },
+        "callerName": { "type": "string" },
+        "callerPhone": { "type": "string" },
+        "vehicleYear": { "type": "string" },
+        "vehicleMake": { "type": "string" },
+        "vehicleModel": { "type": "string" },
+        "service": { "type": "string" },
+        "serviceCategory": { "type": "string" },
+        "summary": { "type": "string" },
+        "outcome": {
+          "type": "string",
+          "enum": ["appointment_requested", "callback_needed", "transferred", "question_answered", "spam_or_hangup"]
+        },
+        "transcript": { "type": "string" },
+        "recordingUrl": { "type": "string" },
+        "afterHours": { "type": "boolean" },
+        "followUp": { "type": "string", "enum": ["new", "done", "none"] },
+        "handledAt": { "type": "string" },
+        "receivedAt": { "type": "string" }
+      },
+      "required": ["externalCallId", "shopId", "startedAt", "outcome", "followUp", "receivedAt"]
+    }
+  },
+  "firestore": {
+    "/settings/{docId}": {
+      "schema": "Settings",
+      "description": "Storefront configuration including cutoff time"
+    },
+    "/audits/{auditId}": {
+      "schema": "Audit",
+      "description": "Missed-call audits run by visitors"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and account role"
+    },
+    "/shops/{shopId}": {
+      "schema": "Shop",
+      "description": "Shop profiles, receptionist setup, and live status"
+    },
+    "/shops/{shopId}/tests/{testId}": {
+      "schema": "TestRecord",
+      "description": "Owner test results against the receptionist phone line"
+    },
+    "/shops/{shopId}/changes/{changeId}": {
+      "schema": "ChangeRecord",
+      "description": "Post-onboarding shop setting adjustments pending admin application"
+    },
+    "/shops/{shopId}/calls/{callId}": {
+      "schema": "CallRecord",
+      "description": "Inbound receptionist calls processed for the shop"
+    },
+    "/intakeErrors/{errorId}": {
+      "schema": "IntakeError",
+      "description": "Unmatched call payloads requiring admin triage"
+    }
+  }
+}

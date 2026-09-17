@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Phone, Menu, X, ShieldCheck, UserCheck, LogOut, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Phone, Menu, X, ShieldCheck, UserCheck, LogOut, ChevronDown, LayoutDashboard, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useSettings } from '../context/SettingsContext.tsx';
 
@@ -13,13 +13,28 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenA
   const { currentUser, userRecord, shopRecord, isPaid, isAdmin, logOut } = useAuth();
   const { settings } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleNav = (view: string) => {
     onNavigate(view);
     setMobileMenuOpen(false);
+    setUserDropdownOpen(false);
   };
 
   const supportPhone = settings.supportPhone || '888-212-1629';
+  const shopDisplayName = shopRecord?.shopName || 'Precision Auto Care';
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200">
@@ -94,17 +109,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenA
             Pricing
           </button>
 
-          {currentUser && (
-            <button
-              onClick={() => handleNav(isPaid ? 'portal' : 'checkout-gate')}
-              className={`hover:text-black min-h-[44px] px-2 flex items-center transition-colors ${
-                currentView === 'portal' || currentView === 'checkout-gate' ? 'text-black font-semibold' : ''
-              }`}
-            >
-              My Shop
-            </button>
-          )}
-
           {isAdmin && (
             <button
               onClick={() => handleNav('admin')}
@@ -129,21 +133,55 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenA
           </a>
 
           {currentUser ? (
-            <div className="flex items-center gap-2">
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => handleNav(isPaid ? 'portal' : 'checkout-gate')}
-                className="flex items-center gap-2 px-3 py-2 bg-[#faf5ff] border border-[#d6bcfa] text-gray-900 rounded-lg font-medium text-xs hover:bg-[#f3e8ff] transition-colors min-h-[44px]"
+                type="button"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2 px-3.5 py-2 bg-[#faf5ff] border border-[#d6bcfa] text-gray-900 rounded-lg font-medium text-xs hover:bg-[#f3e8ff] transition-colors min-h-[44px]"
+                aria-expanded={userDropdownOpen}
+                aria-haspopup="true"
               >
                 <UserCheck className="w-3.5 h-3.5 text-purple-600" />
-                <span className="max-w-[120px] truncate">{shopRecord?.shopName || userRecord?.firstName || 'Portal'}</span>
+                <span className="max-w-[140px] truncate">{shopDisplayName}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-600 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
-              <button
-                onClick={() => logOut()}
-                title="Log Out"
-                className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-1.5 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 animate-in fade-in-50 zoom-in-95 duration-100">
+                  <div className="px-3.5 py-2 border-b border-gray-100">
+                    <p className="text-xs font-bold text-gray-900 truncate">{shopDisplayName}</p>
+                    <p className="text-[11px] text-gray-500 truncate">{currentUser.email}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleNav('dashboard')}
+                    className="w-full text-left px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-[#faf5ff] hover:text-purple-900 flex items-center gap-2 transition-colors min-h-[36px]"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5 text-purple-700" />
+                    <span>Dashboard</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleNav('dashboard-settings')}
+                    className="w-full text-left px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-[#faf5ff] hover:text-purple-900 flex items-center gap-2 transition-colors min-h-[36px]"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-purple-700" />
+                    <span>Settings</span>
+                  </button>
+                  <div className="border-t border-gray-100 my-1" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      logOut();
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors min-h-[36px]"
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -224,15 +262,6 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenA
 
           {currentUser ? (
             <>
-              <button
-                onClick={() => handleNav(isPaid ? 'portal' : 'checkout-gate')}
-                className={`w-full text-left py-2.5 px-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center gap-2 ${
-                  currentView === 'portal' || currentView === 'checkout-gate' ? 'bg-[#faf5ff] font-bold text-gray-900' : 'text-gray-700'
-                }`}
-              >
-                <UserCheck className="w-4 h-4 text-purple-600" />
-                <span>Shop Portal ({shopRecord?.shopName || 'Account'})</span>
-              </button>
               {isAdmin && (
                 <button
                   onClick={() => handleNav('admin')}
@@ -249,9 +278,9 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenA
                     logOut();
                     setMobileMenuOpen(false);
                   }}
-                  className="text-xs text-red-600 font-semibold px-3 py-2 rounded min-h-[44px] flex items-center"
+                  className="text-xs text-red-600 font-semibold px-3 py-2 rounded min-h-[44px] flex items-center hover:bg-rose-50"
                 >
-                  Log Out
+                  Sign Out
                 </button>
               </div>
             </>

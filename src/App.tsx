@@ -27,6 +27,7 @@ function MainApp() {
 
   // Navigation view state
   const [currentView, setCurrentView] = useState<string>('home');
+  const [dashboardTab, setDashboardTab] = useState<'calls' | 'appointments' | 'calendar' | 'settings'>('calls');
   const [signInModalOpen, setSignInModalOpen] = useState<boolean>(false);
   const [signUpModalOpen, setSignUpModalOpen] = useState<boolean>(false);
   const [pricingCanceled, setPricingCanceled] = useState<boolean>(false);
@@ -91,12 +92,28 @@ function MainApp() {
   }, [loading, currentUser, isAdmin, currentView]);
 
   const handleNavigate = (view: string) => {
+    if (view === 'dashboard-settings') {
+      if (!currentUser) {
+        setSignUpModalOpen(false);
+        setSignInModalOpen(true);
+        return;
+      }
+      setDashboardTab('settings');
+      setCurrentView('dashboard');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (view === 'dashboard') {
       if (!currentUser) {
         setSignUpModalOpen(false);
         setSignInModalOpen(true);
         return;
       }
+      setDashboardTab('calls');
+      setCurrentView('dashboard');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
 
     if (view === 'portal') {
@@ -105,10 +122,10 @@ function MainApp() {
         setSignInModalOpen(true);
         return;
       }
-      if (!isPaid && !isAdmin) {
-        setCurrentView('checkout-gate');
-        return;
-      }
+      // Since portal and dashboard are merged into Dashboard:
+      setCurrentView('dashboard');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
 
     if (view === 'admin') {
@@ -287,7 +304,7 @@ function MainApp() {
         )}
 
         {currentView === 'dashboard' && (
-          <DashboardPage />
+          <DashboardPage initialTab={dashboardTab} />
         )}
 
         {currentView === 'portal' && (

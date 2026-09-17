@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
-import { Phone, Calendar, Clock, Car, ChevronDown, ChevronUp, User, Wrench, AlertCircle, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Phone,
+  Calendar,
+  Clock,
+  Car,
+  ChevronDown,
+  ChevronUp,
+  User,
+  Users,
+  Wrench,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  CalendarDays,
+  Settings as SettingsIcon,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
+import { CalendarTab } from './dashboard/CalendarTab.tsx';
+import { SettingsTab } from './dashboard/SettingsTab.tsx';
 
 export type CallStatus = 'New' | 'Reviewed' | 'Called Back';
 export type AppointmentStatus = 'New Request' | 'Confirmed' | 'Declined';
+export type DashboardTabType = 'calls' | 'appointments' | 'calendar' | 'settings';
 
 export interface DashboardCallItem {
   id: string;
@@ -18,6 +37,10 @@ export interface DashboardCallItem {
   fullSummary: string;
   callStatus: CallStatus;
   appointmentStatus?: AppointmentStatus;
+}
+
+interface DashboardPageProps {
+  initialTab?: DashboardTabType;
 }
 
 const INITIAL_CALLS: DashboardCallItem[] = [
@@ -103,11 +126,18 @@ const INITIAL_CALLS: DashboardCallItem[] = [
   },
 ];
 
-export const DashboardPage: React.FC = () => {
+export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'calls' }) => {
   const { currentUser, shopRecord } = useAuth();
-  const [activeTab, setActiveTab] = useState<'calls' | 'appointments'>('calls');
+  const [activeTab, setActiveTab] = useState<DashboardTabType>(initialTab);
   const [calls, setCalls] = useState<DashboardCallItem[]>(INITIAL_CALLS);
   const [expandedCallId, setExpandedCallId] = useState<string | null>('call-1');
+
+  // Synchronize if initialTab changes (e.g. from nav dropdown to settings)
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Filter for Tab 2: only calls where caller requested an appointment
   const appointmentCalls = calls.filter((c) => c.appointmentRequested);
@@ -187,12 +217,71 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-gray-200">
+      {/* Row of Summary Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1: Calls Answered */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              Calls Answered
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+              <Phone className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-gray-950">6</p>
+          <p className="text-xs text-gray-500">100% answered without ringing out</p>
+        </div>
+
+        {/* Metric 2: Customers Captured */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              Customers Captured
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-gray-950">5</p>
+          <p className="text-xs text-gray-500">Full name &amp; vehicle details logged</p>
+        </div>
+
+        {/* Metric 3: Appointment Requests */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              Appointment Requests
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+              <Calendar className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-gray-950">4</p>
+          <p className="text-xs text-gray-500">Booked directly into your queue</p>
+        </div>
+
+        {/* Metric 4: After-Hours Answered */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              After-Hours Answered
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-gray-950">3</p>
+          <p className="text-xs text-gray-500">Saved from calling your competitors</p>
+        </div>
+      </div>
+
+      {/* Tabs Across the Top */}
+      <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('calls')}
-          className={`pb-3.5 px-4 font-bold text-sm sm:text-base border-b-2 flex items-center gap-2.5 transition-colors min-h-[44px] ${
+          className={`pb-3.5 px-4 font-bold text-sm sm:text-base border-b-2 flex items-center gap-2.5 transition-colors whitespace-nowrap min-h-[44px] ${
             activeTab === 'calls'
               ? 'border-purple-600 text-purple-950 font-extrabold'
               : 'border-transparent text-gray-500 hover:text-gray-900'
@@ -213,7 +302,7 @@ export const DashboardPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('appointments')}
-          className={`pb-3.5 px-4 font-bold text-sm sm:text-base border-b-2 flex items-center gap-2.5 transition-colors min-h-[44px] ${
+          className={`pb-3.5 px-4 font-bold text-sm sm:text-base border-b-2 flex items-center gap-2.5 transition-colors whitespace-nowrap min-h-[44px] ${
             activeTab === 'appointments'
               ? 'border-purple-600 text-purple-950 font-extrabold'
               : 'border-transparent text-gray-500 hover:text-gray-900'
@@ -229,6 +318,32 @@ export const DashboardPage: React.FC = () => {
           >
             {appointmentCalls.length}
           </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('calendar')}
+          className={`pb-3.5 px-4 font-bold text-sm sm:text-base border-b-2 flex items-center gap-2.5 transition-colors whitespace-nowrap min-h-[44px] ${
+            activeTab === 'calendar'
+              ? 'border-purple-600 text-purple-950 font-extrabold'
+              : 'border-transparent text-gray-500 hover:text-gray-900'
+          }`}
+        >
+          <CalendarDays className="w-4 h-4 text-purple-600" />
+          <span>Calendar</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('settings')}
+          className={`pb-3.5 px-4 font-bold text-sm sm:text-base border-b-2 flex items-center gap-2.5 transition-colors whitespace-nowrap min-h-[44px] ${
+            activeTab === 'settings'
+              ? 'border-purple-600 text-purple-950 font-extrabold'
+              : 'border-transparent text-gray-500 hover:text-gray-900'
+          }`}
+        >
+          <SettingsIcon className="w-4 h-4 text-purple-600" />
+          <span>Settings</span>
         </button>
       </div>
 
@@ -607,6 +722,17 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB 3: CALENDAR */}
+      {activeTab === 'calendar' && (
+        <CalendarTab
+          calls={calls}
+          onUpdateAppointmentStatus={setSpecificAppointmentStatus}
+        />
+      )}
+
+      {/* TAB 4: SETTINGS */}
+      {activeTab === 'settings' && <SettingsTab />}
     </div>
   );
 };

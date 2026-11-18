@@ -4,6 +4,7 @@ import { SettingsProvider } from './context/SettingsContext.tsx';
 import { Header } from './components/Header.tsx';
 import { Footer } from './components/Footer.tsx';
 import { HomePage } from './components/HomePage.tsx';
+import { FunnelPage } from './components/FunnelPage.tsx';
 import { AuditCalculator } from './components/AuditCalculator.tsx';
 import { PricingPage } from './components/PricingPage.tsx';
 import { TermsPage } from './components/TermsPage.tsx';
@@ -50,6 +51,8 @@ function MainApp() {
       setCurrentView('checkout-success');
     } else if (path.includes('/checkout/test-mode') || url.searchParams.get('mode') === 'test') {
       setCurrentView('checkout-test');
+    } else if (path === '/start') {
+      setCurrentView('funnel');
     } else if (path === '/audit') {
       setCurrentView('audit');
     } else if (path === '/pricing') {
@@ -172,11 +175,13 @@ function MainApp() {
   return (
     <div className="min-h-screen flex flex-col bg-[#fcfcfd] text-gray-900">
       {/* Header */}
-      <Header
-        currentView={currentView}
-        onNavigate={handleNavigate}
-        onOpenAuth={handleOpenAuth}
-      />
+      {currentView !== 'funnel' && (
+        <Header
+          currentView={currentView}
+          onNavigate={handleNavigate}
+          onOpenAuth={handleOpenAuth}
+        />
+      )}
 
       {/* Main Content View */}
       <main className="flex-1">
@@ -185,6 +190,14 @@ function MainApp() {
             onOpenAudit={() => handleNavigate('audit')}
             onOpenPricing={() => handleNavigate('pricing')}
             onOpenSignUp={() => handleOpenAuth('signup')}
+          />
+        )}
+
+        {currentView === 'funnel' && (
+          <FunnelPage
+            onOpenSignUp={() => handleOpenAuth('signup')}
+            onOpenAudit={() => handleNavigate('audit')}
+            onOpenPricing={() => handleNavigate('pricing')}
           />
         )}
 
@@ -334,7 +347,7 @@ function MainApp() {
       </main>
 
       {/* Footer on every page */}
-      <Footer onNavigate={handleNavigate} />
+      {currentView !== 'funnel' && <Footer onNavigate={handleNavigate} />}
 
       {/* Sign In Modal */}
       <AuthModal
@@ -360,7 +373,7 @@ function MainApp() {
       />
 
       {/* Floating Back to Top Button */}
-      <BackToTop />
+      {currentView !== 'funnel' && <BackToTop />}
     </div>
   );
 }
